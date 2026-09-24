@@ -9,6 +9,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/joho/godotenv"
 )
 
@@ -31,17 +32,18 @@ func main() {
 	app := fiber.New()
 
 	app.Use(
+		logger.New(),
+	)
+
+	app.Use(
 		cors.New(
 			cors.Config{
-				AllowOrigins:
-					"http://localhost:4200," +
-						"https://herbie-charge-angular.vercel.app",
+				AllowOrigins: "http://localhost:4200," +
+					"https://herbie-charge-angular.vercel.app",
 
-				AllowHeaders:
-					"Origin, Content-Type, Accept",
+				AllowHeaders: "Origin, Content-Type, Accept",
 
-				AllowMethods:
-					"GET,POST,OPTIONS",
+				AllowMethods: "GET,POST,OPTIONS",
 			},
 		),
 	)
