@@ -1,10 +1,11 @@
 package main
 
 import (
+	"log"
+
 	handler "herbie-charge-api/internal/charge/delivery/http"
 	"herbie-charge-api/internal/charge/service"
 	"herbie-charge-api/internal/config"
-	"log"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -20,6 +21,13 @@ func main() {
 
 	cfg := config.LoadConfig()
 
+	if err := cfg.Validate(); err != nil {
+		log.Fatal(
+			"invalid config: ",
+			err,
+		)
+	}
+
 	app := fiber.New()
 
 	app.Use(
@@ -31,6 +39,9 @@ func main() {
 
 				AllowHeaders:
 					"Origin, Content-Type, Accept",
+
+				AllowMethods:
+					"GET,POST,OPTIONS",
 			},
 		),
 	)
@@ -64,6 +75,11 @@ func main() {
 	app.Post(
 		"/api/charge",
 		chargeHandler.Charge,
+	)
+
+	log.Printf(
+		"server running on port %s",
+		cfg.Port,
 	)
 
 	log.Fatal(
