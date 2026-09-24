@@ -24,9 +24,7 @@ func (h *ChargeHandler) Charge(
 ) error {
 	var req dto.ChargeRequest
 
-	if err := c.BodyParser(
-		&req,
-	); err != nil {
+	if err := c.BodyParser(&req); err != nil {
 		return c.Status(
 			fiber.StatusBadRequest,
 		).JSON(
@@ -37,9 +35,10 @@ func (h *ChargeHandler) Charge(
 		)
 	}
 
-	if err := h.service.Charge(
-		req,
-	); err != nil {
+	result, err :=
+		h.service.Charge(req)
+
+	if err != nil {
 		return c.Status(
 			fiber.StatusBadRequest,
 		).JSON(
@@ -54,6 +53,7 @@ func (h *ChargeHandler) Charge(
 		dto.ChargeResponse{
 			Success: true,
 			Message: "เติมเครดิตสำเร็จ",
+			Data:    result,
 		},
 	)
 }

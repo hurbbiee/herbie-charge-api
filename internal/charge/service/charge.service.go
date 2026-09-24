@@ -2,8 +2,11 @@ package service
 
 import (
 	"errors"
-	"herbie-charge-api/internal/charge/dto"
+	"fmt"
 	"log"
+	"time"
+
+	"herbie-charge-api/internal/charge/dto"
 )
 
 type ChargeService struct {
@@ -20,14 +23,14 @@ func NewChargeService(
 
 func (s *ChargeService) Charge(
 	req dto.ChargeRequest,
-) error {
+) (*dto.ChargeResult, error) {
 	log.Printf(
 		"[charge] request amount=%d",
 		req.Amount,
 	)
 
 	if req.IDToken == "" {
-		return errors.New(
+		return nil, errors.New(
 			"idToken is required",
 		)
 	}
@@ -42,7 +45,7 @@ func (s *ChargeService) Charge(
 	}
 
 	if !allowedAmounts[req.Amount] {
-		return errors.New(
+		return nil, errors.New(
 			"invalid amount",
 		)
 	}
@@ -58,17 +61,51 @@ func (s *ChargeService) Charge(
 			err,
 		)
 
-		return err
+		return nil, err
 	}
 
 	log.Println(
 		"[charge] LINE user verified",
 	)
 
+	/*
+		MOCK DATABASE
+
+		ตอนนี้สมมติว่าผู้ใช้มีเครดิตเดิม 100 บาท
+
+		ของจริงภายหลังจะเป็น:
+
+		currentBalance :=
+		    walletRepository.GetBalance(profile.Sub)
+
+		newBalance :=
+		    currentBalance + req.Amount
+
+		walletRepository.Update(...)
+	*/
+
+	currentBalance := 100
+
+	newBalance :=
+		currentBalance + req.Amount
+
+	now := time.Now().UTC()
+
+	result := dto.ChargeResult{
+		TransactionID: fmt.Sprintf(
+			"TXN-%d",
+			now.UnixMilli(),
+		),
+		Amount:    req.Amount,
+		Balance:   newBalance,
+		Status:    "success",
+		CreatedAt: now.Format(time.RFC3339),
+	}
+
 	if err :=
 		s.lineService.SendChargeSuccess(
 			profile.Sub,
-			req.Amount,
+			result,
 		); err != nil {
 
 		log.Printf(
@@ -76,14 +113,15 @@ func (s *ChargeService) Charge(
 			err,
 		)
 
-		return err
+		return nil, err
 	}
 
 	log.Printf(
-		"[charge] success amount=%d",
-		req.Amount,
+		"[charge] success transaction=%s amount=%d balance=%d",
+		result.TransactionID,
+		result.Amount,
+		result.Balance,
 	)
 
-	return nil
+	return &result, nil
 }
-
