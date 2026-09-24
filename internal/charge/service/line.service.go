@@ -108,20 +108,20 @@ func (s *LineService) SendChargeSuccess(
 	userID string,
 	amount int,
 ) error {
-	message := map[string]interface{}{
+	message := map[string]any{
 		"type":    "flex",
 		"altText": "เติมเครดิตสำเร็จ",
-		"contents": map[string]interface{}{
+		"contents": map[string]any{
 			"type": "bubble",
 
-			"header": map[string]interface{}{
+			"header": map[string]any{
 				"type":            "box",
 				"layout":          "vertical",
 				"backgroundColor": "#10B981",
 				"paddingAll":      "20px",
 
-				"contents": []interface{}{
-					map[string]interface{}{
+				"contents": []any{
+					map[string]any{
 						"type":   "text",
 						"text":   "เติมเครดิตสำเร็จ",
 						"weight": "bold",
@@ -131,53 +131,61 @@ func (s *LineService) SendChargeSuccess(
 				},
 			},
 
-			"body": map[string]interface{}{
-				"type":    "box",
-				"layout":  "vertical",
-				"spacing": "md",
+			"body": map[string]any{
+				"type":       "box",
+				"layout":     "vertical",
+				"spacing":    "lg",
+				"paddingAll": "20px",
 
-				"contents": []interface{}{
-					map[string]interface{}{
-						"type":  "text",
-						"text":  "จำนวนเงิน",
-						"color": "#777777",
-						"size":  "sm",
+				"contents": []any{
+					map[string]any{
+						"type":   "text",
+						"text":   "จำนวนเงินที่เติม",
+						"size":   "sm",
+						"color":  "#777777",
 					},
 
-					map[string]interface{}{
+					map[string]any{
 						"type":   "text",
 						"text":   fmt.Sprintf("%d.00 บาท", amount),
-						"weight": "bold",
 						"size":   "xxl",
+						"weight": "bold",
+						"color":  "#111111",
 					},
 
-					map[string]interface{}{
-						"type": "separator",
+					map[string]any{
+						"type":   "separator",
+						"margin": "lg",
 					},
 
-					map[string]interface{}{
+					map[string]any{
+						"type":   "text",
+						"text":   "สถานะ",
+						"size":   "sm",
+						"color":  "#777777",
+						"margin": "lg",
+					},
+
+					map[string]any{
 						"type":   "text",
 						"text":   "ทำรายการสำเร็จ",
-						"color":  "#10B981",
+						"size":   "md",
 						"weight": "bold",
+						"color":  "#10B981",
 					},
 				},
 			},
 		},
 	}
 
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"to": userID,
-
-		"messages": []interface{}{
+		"messages": []any{
 			message,
 		},
 	}
 
-	body, err := json.Marshal(
-		payload,
-	)
-
+	body, err := json.Marshal(payload)
 	if err != nil {
 		return err
 	}
@@ -187,7 +195,6 @@ func (s *LineService) SendChargeSuccess(
 		"https://api.line.me/v2/bot/message/push",
 		bytes.NewBuffer(body),
 	)
-
 	if err != nil {
 		return err
 	}
@@ -199,14 +206,12 @@ func (s *LineService) SendChargeSuccess(
 
 	req.Header.Set(
 		"Authorization",
-		"Bearer "+
-			s.config.LineChannelAccessToken,
+		"Bearer "+s.config.LineChannelAccessToken,
 	)
 
 	client := &http.Client{}
 
 	resp, err := client.Do(req)
-
 	if err != nil {
 		return err
 	}
@@ -216,13 +221,12 @@ func (s *LineService) SendChargeSuccess(
 	if resp.StatusCode < 200 ||
 		resp.StatusCode >= 300 {
 
-		body, _ := io.ReadAll(
-			resp.Body,
-		)
+		responseBody, _ :=
+			io.ReadAll(resp.Body)
 
 		return fmt.Errorf(
 			"LINE push message failed: %s",
-			string(body),
+			string(responseBody),
 		)
 	}
 

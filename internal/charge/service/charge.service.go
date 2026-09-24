@@ -22,13 +22,28 @@ func (s *ChargeService) Charge(
 	req dto.ChargeRequest,
 ) error {
 	log.Printf(
-		"charge requested: amount=%d",
+		"[charge] request amount=%d",
 		req.Amount,
 	)
 
 	if req.IDToken == "" {
 		return errors.New(
 			"idToken is required",
+		)
+	}
+
+	allowedAmounts := map[int]bool{
+		100: true,
+		200: true,
+		300: true,
+		400: true,
+		500: true,
+		600: true,
+	}
+
+	if !allowedAmounts[req.Amount] {
+		return errors.New(
+			"invalid amount",
 		)
 	}
 
@@ -39,7 +54,7 @@ func (s *ChargeService) Charge(
 
 	if err != nil {
 		log.Printf(
-			"LINE verify failed: %v",
+			"[charge] LINE verify failed: %v",
 			err,
 		)
 
@@ -47,7 +62,7 @@ func (s *ChargeService) Charge(
 	}
 
 	log.Println(
-		"LINE user verified",
+		"[charge] LINE user verified",
 	)
 
 	if err :=
@@ -57,7 +72,7 @@ func (s *ChargeService) Charge(
 		); err != nil {
 
 		log.Printf(
-			"LINE push failed: %v",
+			"[charge] LINE push failed: %v",
 			err,
 		)
 
@@ -65,9 +80,10 @@ func (s *ChargeService) Charge(
 	}
 
 	log.Printf(
-		"charge success: amount=%d",
+		"[charge] success amount=%d",
 		req.Amount,
 	)
 
 	return nil
 }
+
